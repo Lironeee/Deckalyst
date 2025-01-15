@@ -5,7 +5,7 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const website = formData.get("website") as string;
-    const apiKey = formData.get("apikey") as string;
+    const apiKey = process.env.HARMONIC_KEY;
     console.log(apiKey);
     if (!website) {
       return NextResponse.json(

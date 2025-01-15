@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Upload, Loader2 } from 'lucide-react';
+import { Upload, Loader2, LoaderCircle, CheckCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,8 +12,37 @@ import PitchDeckChat from './PitchDeckChat';
 
 export default function PdfUploader() {
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeckLoaded, setIsDeckLoaded] = useState(false);
+  const [deckData, setDeckData] = useState<string>('');
+
+
+  const [isHarmonicLoaded, setIsHarmonicLoaded] = useState(false);
+  const [harmonicData, setHarmonicData] =  useState<string>('');
+
   const [analysis, setAnalysis] = useState<string>('');
   const [showAnalysis, setShowAnalysis] = useState(false);
+
+  const next = async (e) => {
+    // Add a text field
+  
+    const formData = new FormData();
+
+    // Append the form data (both text and file)
+    formData.append('harmonicData', harmonicData);  // assuming harmonicData is a string
+    formData.append('fileData', deckData);            // assuming fileData is a string (you can also append files here)
+  
+    // Send the POST request
+    const response = await fetch('/api/combine-data', {
+      method: 'POST',
+      body: formData,  // stringify the object to send as JSON
+    });
+
+    response.json().then(e => {
+      setAnalysis(e.analysis);
+      setIsLoading(false);
+      setShowAnalysis(true);
+    })
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -22,25 +51,114 @@ export default function PdfUploader() {
     const formData = new FormData(e.currentTarget);
 
     try {
-      const response = await fetch('/api/analyze-pdf', {
-        method: 'POST',
-        body: formData,
-      });
+      // Call both APIs in parallel
+      const [ pdfResponse, harmonicResponse] = await Promise.all([
+        fetch('/api/analyze-pdf', {
+          method: 'POST',
+          body: formData,
+        }),
+        fetch('/api/harmonic', {
+          method: 'POST',
+          body: formData,
+        }),
+      ]);
 
-      const data = await response.json();
-      if (data.analysis) {
-        setAnalysis(data.analysis);
-        setShowAnalysis(true);
-      }
+      // Parse both responses
+      pdfResponse.json().then((pdfData => {
+        console.log(pdfData);
+        setDeckData(pdfData);
+        setIsDeckLoaded(true);
+      })).catch((err => {
+        console.error(err);
+      }))
+
+      harmonicResponse.json().then((harmonicData => {
+        console.log(harmonicData);
+        setHarmonicData(harmonicData);
+        setIsHarmonicLoaded(true);
+      })).catch((err => {
+        console.error(err);
+      }))
+      
+      //setIsDeckLoaded(true);
+
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error('Error:', error);
     } finally {
-      setIsLoading(false);
+
+     // setIsLoading(false);
     }
   };
 
   return (
     <AnimatePresence mode="wait">
+      {isLoading ? (
+        <>
+          <div className="relative z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div className="fixed inset-0 bg-gray-500/75 transition-opacity" aria-hidden="true"></div>
+
+            <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+              <div className="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
+                <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg md:max-w-xl lg:max-w-2xl">
+                  <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                    <div className="sm:flex sm:items-start">
+                      <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                        <h3 className="text-base font-semibold text-gray-900" id="modal-title">Analyzing</h3>
+                        <div className="mt-4">
+                          <ol className="flex flex-wrap items-center w-full text-sm font-medium text-center text-gray-500 dark:text-gray-400 sm:text-base">
+                            {/* Step 1: Parsing Deck */}
+                            <li className="flex items-center w-full sm:w-auto text-blue-600 dark:text-blue-500">
+                              <span className="flex items-center">
+                                {isDeckLoaded ? (
+                                  <CheckCheck className="w-4 h-4 me-2" />
+                                ) : (
+                                  <LoaderCircle className="w-4 h-4 me-2" />
+                                )}
+                                Parsing Deck
+                              </span>
+                            </li>
+                            <li className="flex items-center w-full sm:w-auto text-blue-600 dark:text-blue-500">
+                              <span className="mx-2 text-gray-200 dark:text-gray-500">/</span>
+                            </li>
+
+                            {/* Step 2: Getting Data from Harmonic */}
+                            <li className="flex items-center w-full sm:w-auto text-blue-600 dark:text-blue-500">
+                              <span className="flex items-center">
+                                {isHarmonicLoaded ? (
+                                  <CheckCheck className="w-4 h-4 me-2" />
+                                ) : (
+                                  <LoaderCircle className="w-4 h-4 me-2" />
+                                )}
+                                Getting Data from Harmonic
+                              </span>
+                            </li>
+                            <li className="flex items-center w-full sm:w-auto text-blue-600 dark:text-blue-500">
+                              <span className="mx-2 text-gray-200 dark:text-gray-500">/</span>
+                            </li>
+
+                            {/* Step 3: Confirmation */}
+                            <li className="flex items-center w-full sm:w-auto">
+                              <span className="me-2">3</span>Confirmation
+                            </li>
+                          </ol>
+                          ``
+                          <Button
+                          onClick={next}
+                          >next</Button>
+
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <></>
+      )}
+
       {!showAnalysis ? (
         <motion.div
           key="uploader"
@@ -53,8 +171,14 @@ export default function PdfUploader() {
             <CardContent className="p-6">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
+                  <Label htmlFor="website-name" className="text-lg font-medium text-gray-200">
+                    Website Name
+                  </Label>
+                  <Input id="website" name="website" required></Input>
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="file-upload" className="text-lg font-medium text-gray-200">
-                    Sélectionnez votre PDF
+                    Upload Startup Deck
                   </Label>
                   <motion.div
                     className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-600 border-dashed rounded-md"
@@ -68,12 +192,12 @@ export default function PdfUploader() {
                           htmlFor="file-upload"
                           className="relative cursor-pointer rounded-md font-medium text-purple-400 hover:text-purple-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500"
                         >
-                          <span>Uploader un fichier</span>
+                          <span>Upload a file</span>
                           <Input id="file-upload" name="file" type="file" accept=".pdf" className="sr-only" required />
                         </Label>
-                        <p className="pl-1">ou glisser-déposer</p>
+                        <p className="pl-1">or drag and drop</p>
                       </div>
-                      <p className="text-xs text-gray-400">PDF jusqu'à 10MB</p>
+                      <p className="text-xs text-gray-400">PDF up to 10MB</p>
                     </div>
                   </motion.div>
                 </div>
@@ -86,10 +210,10 @@ export default function PdfUploader() {
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Analyse en cours...
+                        Analyzing...
                       </>
                     ) : (
-                      'Analyser le PDF'
+                      'Analyze PDF'
                     )}
                   </Button>
                 </div>
@@ -116,4 +240,3 @@ export default function PdfUploader() {
     </AnimatePresence>
   );
 }
-
