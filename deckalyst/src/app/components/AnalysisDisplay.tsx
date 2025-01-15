@@ -13,7 +13,31 @@ interface AnalysisDisplayProps {
 export default function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
-  const sections = analysis.split('\n\n').filter(section => section.trim() !== '');
+  const getScore = () => {
+    const scoreMatch = analysis.match(/Investment Score: \[(\d+)\/100\]/);
+    return scoreMatch ? scoreMatch[1] : null;
+  };
+
+  const cleanText = (text: string) => {
+    return text
+      .replace(/^[#\-*• ]+/gm, '')
+      .replace(/\*\*/g, '')
+      .replace(/###/g, '')
+      .trim();
+  };
+
+  const sections = analysis
+    .split('\n\n')
+    .filter(section => section.trim() !== '')
+    .map(section => {
+      const [title, ...content] = section.split('\n');
+      return {
+        title: cleanText(title),
+        content: content.map(line => cleanText(line)).join('\n')
+      };
+    });
+
+  const score = getScore();
 
   const toggleSection = (index: number) => {
     if (expandedSection === `section-${index}`) {
@@ -26,10 +50,19 @@ export default function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
   return (
     <Card className="bg-gray-800/50 border-gray-700 overflow-hidden backdrop-blur-md">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold text-gray-100">Analyse du Pitch Deck</CardTitle>
+        <CardTitle className="text-2xl font-bold text-gray-100">
+          Analyse du Pitch Deck
+        </CardTitle>
+        {score && (
+          <div className="mt-2 flex items-center justify-center">
+            <div className="text-4xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
+              Score Global: {score}/100
+            </div>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
-        {sections.map((section, index) => (
+        {sections.map(({ title, content }, index) => (
           <motion.div
             key={index}
             initial={false}
@@ -42,7 +75,7 @@ export default function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
               className="w-full justify-between text-left font-medium text-gray-200 hover:text-gray-100 focus:outline-none"
               onClick={() => toggleSection(index)}
             >
-              {section.split('\n')[0]}
+              {title}
               {expandedSection === `section-${index}` ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
             <AnimatePresence>
@@ -54,7 +87,7 @@ export default function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
                   transition={{ duration: 0.3 }}
                 >
                   <div className="px-4 py-2 text-sm text-gray-300 whitespace-pre-wrap">
-                    {section.split('\n').slice(1).join('\n')}
+                    {content}
                   </div>
                 </motion.div>
               )}
