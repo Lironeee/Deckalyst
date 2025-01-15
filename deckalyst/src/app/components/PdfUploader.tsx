@@ -53,6 +53,18 @@ export default function PdfUploader() {
             <CardContent className="p-6">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
+                  <Label htmlFor="website" className="text-lg font-medium text-gray-200">
+                    Site web de l'entreprise (optionnel)
+                  </Label>
+                  <Input
+                    id="website"
+                    name="website"
+                    type="url"
+                    placeholder="https://example.com"
+                    className="bg-gray-700 text-gray-100 border-gray-600 focus:ring-purple-500"
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="file-upload" className="text-lg font-medium text-gray-200">
                     Sélectionnez votre PDF
                   </Label>

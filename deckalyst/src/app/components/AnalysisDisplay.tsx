@@ -14,8 +14,32 @@ export default function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   const getScore = () => {
-    const scoreMatch = analysis.match(/Investment Score: \[(\d+)\/100\]/);
-    return scoreMatch ? scoreMatch[1] : null;
+    // Chercher le score dans différents formats possibles
+    const patterns = [
+      /Investment Score: \[(\d+)\/100\]/,
+      /Score Global: (\d+)\/100/,
+      /Score: (\d+)\/100/,
+      /(\d+)\/100/
+    ];
+
+    for (const pattern of patterns) {
+      const match = analysis.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+
+    // Si aucun score n'est trouvé, chercher dans la section FINAL ASSESSMENT
+    const finalSection = analysis
+      .split('\n\n')
+      .find(section => section.includes('FINAL ASSESSMENT'));
+    
+    if (finalSection) {
+      const scoreMatch = finalSection.match(/(\d+)\/100/);
+      return scoreMatch ? scoreMatch[1] : null;
+    }
+
+    return null;
   };
 
   const cleanText = (text: string) => {
