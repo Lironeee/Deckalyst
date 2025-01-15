@@ -79,72 +79,71 @@ async function analyzePitchDeck(slidesFolder: string): Promise<string> {
   const content: any[] = [
     {
       type: "text",
-      text: `Analysez ce pitch deck en détail et structurez votre réponse avec beaucoup d'espacement :
+      text: `Analyze this pitch deck and provide a detailed analysis following this structure:
 
-🎯 ANALYSE DU PITCH DECK
+🎯 STARTUP IDENTITY
+• Company Name: [Required - write "Unknown" if not found]
+• Founded Date: [Required - write "Unknown" if not found]
+• Location: [Required - write "Unknown" if not found]
+• One-Line Description: [Required - write "Unknown" if not found]
 
------------------
+👥 TEAM
+• Founders Background:
+  - Education and previous experience
+  - Previous founder/C-level positions
+  - Notable achievements
 
-📊 PROBLÈME ET SOLUTION
+• Team Structure:
+  - Current team size and composition
+  - Key hires/departures (last 6 months)
+  - Department breakdown (Sales, Tech, etc.)
+  - Tech team details (PhDs, Engineers, Data Scientists)
 
-• Problème identifié :
+💰 BUSINESS & METRICS
+• Business Model:
+  - Type (SaaS, Marketplace, Hardware)
+  - Revenue streams
+  - Pricing strategy
 
-• Solution proposée :
+• Key Metrics:
+  - ARR/Revenue (with product/function split)
+  - Growth rates (YoY, MoM)
+  - Unit economics (CAC, LTV, etc.)
 
-• Points forts :
+🚀 PRODUCT
+• Product Overview:
+  - Core capabilities & features
+  - Technical architecture
+  - Product roadmap
 
+• Market Validation:
+  - Customer testimonials
+  - External ratings (G2, Product Hunt, Gartner)
+  - Business cases
 
-💹 MARCHÉ ET TRACTION
+🌍 MARKET & COMPETITION
+• Market Analysis:
+  - Market sizing (TAM, SAM, SOM)
+  - Market structure
+  - Go-to-market strategy
 
-• Taille du marché :
+• Competitive Landscape:
+  - Direct competitors
+  - Incumbent players
+  - Competitive advantages
 
-• Croissance :
+🎯 FINAL ASSESSMENT
+Investment Score: [X/100]
 
-• Traction actuelle :
+Justify the score based on:
+• Team strength and experience
+• Market opportunity and timing
+• Product differentiation
+• Business model sustainability
+• Growth potential
+• Risk factors
 
-• Clients/Partenaires clés :
-
-
-💪 AVANTAGES COMPÉTITIFS
-
-• Différenciateurs clés :
-
-• Barrières à l'entrée :
-• Technologies propriétaires :
-
-
-💰 MODÈLE ÉCONOMIQUE
-
-• Type de revenus :
-
-• Pricing :
-
-• Metrics clés :
-
-• Unit economics :
-
-
-👥 ÉQUIPE
-
-• Fondateurs :
-
-• Expérience :
-
-• Advisors :
-
-
-💭 RECOMMANDATION D'INVESTISSEMENT
-
-• Points forts :
-
-• Points de vigilance :
-
-• Potentiel de croissance :
-
-
-🎯 CONCLUSION FINALE
-
-Utilisez ce format exact avec les lignes de séparation et les espaces. Remplissez chaque section en respectant les retours à la ligne et l'espacement.`,
+[Provide a clear explanation of the score, highlighting key strengths and concerns]`,
     },
   ];
 
@@ -162,12 +161,18 @@ Utilisez ce format exact avec les lignes de séparation et les espaces. Rempliss
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
           content:
-            "Vous êtes un partenaire expérimenté d'un fonds de capital-risque. Analysez ce pitch deck et structurez votre réponse en respectant scrupuleusement le formatage demandé avec les lignes de séparation et les espaces. Chaque section doit être clairement séparée des autres. Privilégiez les phrases courtes et impactantes. Répondez en français.",
+            "You are an experienced venture capital analyst. Your task is to:\n" +
+            "1. Thoroughly analyze the pitch deck\n" +
+            "2. Provide a comprehensive analysis of each section\n" +
+            "3. Assign a SINGLE SCORE out of 100 reflecting the startup's overall potential\n" +
+            "4. The score should consider: team (25pts), market (25pts), product (25pts), traction/metrics (25pts)\n" +
+            "5. Clearly justify your score with specific observations\n\n" +
+            "Be direct and honest in your assessment. If information is missing, mention it as a risk factor.",
         },
         {
           role: "user",
