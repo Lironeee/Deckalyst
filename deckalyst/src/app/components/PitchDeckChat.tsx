@@ -1,8 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import type { FormEvent } from 'react';
-import { Send } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Send, Loader2 } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -25,10 +28,15 @@ export default function PitchDeckChat({ analysis }: { analysis: string }) {
   }, [analysis]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      const scrollContainer = messagesEndRef.current.parentElement;
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }
+    }
   }, [messages]);
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
@@ -58,48 +66,63 @@ export default function PitchDeckChat({ analysis }: { analysis: string }) {
   };
 
   return (
-    <div className="flex flex-col h-[600px] bg-white shadow-lg rounded-lg overflow-hidden">
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`p-3 rounded-lg ${
-              message.role === 'user'
-                ? 'bg-indigo-100 ml-auto'
-                : 'bg-gray-100'
-            } max-w-[80%]`}
-          >
-            <p className="text-sm">{message.content}</p>
-          </div>
-        ))}
+    <Card className="flex flex-col h-[600px] bg-gray-800/50 border-gray-700 shadow-lg rounded-lg overflow-hidden backdrop-blur-md">
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold text-gray-100">Chat avec l'IA</CardTitle>
+      </CardHeader>
+      
+      <CardContent className="flex-1 overflow-y-auto p-4 space-y-4" style={{ height: 'calc(100% - 130px)' }}>
+        <AnimatePresence initial={false}>
+          {messages.map((message, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className={`p-3 rounded-lg ${
+                message.role === 'user'
+                  ? 'bg-purple-600 ml-auto'
+                  : 'bg-gray-700'
+              } max-w-[80%]`}
+            >
+              <p className="text-sm text-gray-100">{message.content}</p>
+            </motion.div>
+          ))}
+        </AnimatePresence>
         {isLoading && (
-          <div className="bg-gray-100 p-3 rounded-lg">
-            <p className="text-sm">En train de répondre...</p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gray-700 p-3 rounded-lg"
+          >
+            <Loader2 className="h-5 w-5 text-gray-400 animate-spin" />
+          </motion.div>
         )}
         <div ref={messagesEndRef} />
-      </div>
-      
-      <form onSubmit={handleSubmit} className="p-4 border-t">
-        <div className="flex items-center space-x-2">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Posez votre question sur le pitch deck..."
-            className="flex-1 p-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            disabled={isLoading}
-          />
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="bg-indigo-500 text-white p-2 rounded-full hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-indigo-300"
-          >
-            <Send size={20} />
-          </button>
-        </div>
-      </form>
-    </div>
+      </CardContent>
+      <CardFooter>
+        <form onSubmit={handleSubmit} className="w-full">
+          <div className="flex items-center space-x-2">
+            <Input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Posez votre question sur le pitch deck..."
+              className="flex-1 bg-gray-700 text-gray-100 border-gray-600 focus:ring-purple-500"
+              disabled={isLoading}
+            />
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="bg-purple-600 text-white hover:bg-purple-700 focus:ring-purple-500"
+            >
+              <Send size={20} />
+            </Button>
+          </div>
+        </form>
+      </CardFooter>
+    </Card>
   );
 }
 

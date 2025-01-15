@@ -1,8 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Upload } from 'lucide-react';
-import AnalysisDisplay from '../components/AnalysisDisplay';
+import { Upload, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import AnalysisDisplay from './AnalysisDisplay';
 import PitchDeckChat from './PitchDeckChat';
 
 export default function PdfUploader() {
@@ -35,51 +40,80 @@ export default function PdfUploader() {
   };
 
   return (
-    <div className="space-y-8">
+    <AnimatePresence mode="wait">
       {!showAnalysis ? (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="max-w-xl mx-auto">
-            <label htmlFor="file-upload" className="block text-sm font-medium text-gray-700 mb-2">
-              Sélectionnez votre PDF
-            </label>
-            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-              <div className="space-y-1 text-center">
-                <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                <div className="flex text-sm text-gray-600">
-                  <label
-                    htmlFor="file-upload"
-                    className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
+        <motion.div
+          key="uploader"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Card className="max-w-xl mx-auto bg-gray-800/50 border-gray-700 backdrop-blur-md">
+            <CardContent className="p-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="file-upload" className="text-lg font-medium text-gray-200">
+                    Sélectionnez votre PDF
+                  </Label>
+                  <motion.div
+                    className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-600 border-dashed rounded-md"
+                    whileHover={{ scale: 1.02, borderColor: '#9333ea' }}
+                    transition={{ duration: 0.2 }}
                   >
-                    <span>Uploader un fichier</span>
-                    <input id="file-upload" name="file" type="file" accept=".pdf" className="sr-only" required />
-                  </label>
-                  <p className="pl-1">ou glisser-déposer</p>
+                    <div className="space-y-1 text-center">
+                      <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                      <div className="flex text-sm text-gray-400">
+                        <Label
+                          htmlFor="file-upload"
+                          className="relative cursor-pointer rounded-md font-medium text-purple-400 hover:text-purple-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500"
+                        >
+                          <span>Uploader un fichier</span>
+                          <Input id="file-upload" name="file" type="file" accept=".pdf" className="sr-only" required />
+                        </Label>
+                        <p className="pl-1">ou glisser-déposer</p>
+                      </div>
+                      <p className="text-xs text-gray-400">PDF jusqu'à 10MB</p>
+                    </div>
+                  </motion.div>
                 </div>
-                <p className="text-xs text-gray-500">PDF jusqu'à 10MB</p>
-              </div>
-            </div>
-          </div>
-          <div className="text-center">
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-300"
-            >
-              {isLoading ? 'Analyse en cours...' : 'Analyser le PDF'}
-            </button>
-          </div>
-        </form>
+                <div className="text-center">
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition-all duration-300"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Analyse en cours...
+                      </>
+                    ) : (
+                      'Analyser le PDF'
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </motion.div>
       ) : (
-        <div className="flex space-x-4">
-          <div className="w-1/2">
+        <motion.div
+          key="analysis"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4"
+        >
+          <div className="w-full md:w-1/2">
             <AnalysisDisplay analysis={analysis} />
           </div>
-          <div className="w-1/2">
+          <div className="w-full md:w-1/2">
             <PitchDeckChat analysis={analysis} />
           </div>
-        </div>
+        </motion.div>
       )}
-    </div>
+    </AnimatePresence>
   );
 }
 
