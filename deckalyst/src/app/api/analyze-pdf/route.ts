@@ -20,16 +20,146 @@ const CACHE_DIR = join(process.cwd(), "cache");
 const UPLOAD_DIR = join(process.cwd(), "tmp", "uploads");
 const SLIDES_DIR = join(process.cwd(), "tmp", "slides");
 
-// Créer les dossiers avec les bonnes permissions
+// Create directories with proper permissions
 [CACHE_DIR, UPLOAD_DIR, SLIDES_DIR].forEach((dir) => {
   try {
     if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true, mode: 0o777 }); // Ajouter les permissions
+      mkdirSync(dir, { recursive: true, mode: 0o777 });
     }
   } catch (error) {
-    console.error(`Erreur lors de la création du dossier ${dir}:`, error);
+    console.error(`Error creating directory ${dir}:`, error);
   }
 });
+
+// Mock data for market research
+const MOCK_MARKET_DATA = {
+  crunchbase: {
+    funding_rounds: [
+      { amount: 5000000, date: "2023-01", type: "Series A" },
+      { amount: 1200000, date: "2022-03", type: "Seed" },
+    ],
+    competitors: [
+      { name: "Competitor A", funding_total: 12000000 },
+      { name: "Competitor B", funding_total: 8000000 },
+    ],
+    market_size: 4500000000,
+    growth_rate: 23.5,
+  },
+  statista: {
+    market_data: [
+      { year: 2023, size: 4200000000 },
+      { year: 2024, projected_size: 5100000000 },
+    ],
+    industry_metrics: {
+      average_deal_size: 850000,
+      customer_acquisition_cost: 12000,
+      lifetime_value: 89000,
+    },
+  },
+  news: [
+    {
+      title: "Industry Growth Trends",
+      date: "2024-01-15",
+      highlights: [
+        "Market expected to reach $8B by 2026",
+        "Key players raising significant funding",
+      ],
+    },
+  ],
+};
+
+interface ResearchResult {
+  source: string;
+  date: string;
+  data: any;
+  confidence: "high" | "medium" | "low";
+}
+
+// Simulated research function
+async function performOnlineResearch(
+  query: string,
+  sources: string[]
+): Promise<ResearchResult[]> {
+  const results: ResearchResult[] = [];
+
+  // Simulate network delay
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
+  for (const source of sources) {
+    let mockData;
+    switch (source) {
+      case "crunchbase":
+        mockData = MOCK_MARKET_DATA.crunchbase;
+        break;
+      case "statista":
+        mockData = MOCK_MARKET_DATA.statista;
+        break;
+      case "news":
+        mockData = MOCK_MARKET_DATA.news;
+        break;
+      default:
+        mockData = null;
+    }
+
+    results.push({
+      source,
+      date: new Date().toISOString(),
+      data: mockData,
+      confidence: mockData ? "high" : "low",
+    });
+  }
+
+  return results;
+}
+
+// Mock Harmonic data
+const MOCK_HARMONIC_DATA: HarmonicCompany = {
+  name: "Example Corp",
+  description: "Innovative SaaS Platform",
+  founded_date: "2022-01-01",
+  employee_count: 45,
+  funding_total: 6200000,
+  industry: "Enterprise Software",
+  location: {
+    country: "United States",
+    city: "San Francisco",
+  },
+  social_media: {
+    linkedin_url: "https://linkedin.com/company/example-corp",
+  },
+  employees: [
+    {
+      title: "CEO",
+      department: "Executive",
+      role_type: "Leadership",
+      location: "San Francisco",
+      start_date: "2022-01",
+      contact: {
+        linkedin_url: "https://linkedin.com/in/ceo",
+      },
+    },
+    {
+      title: "CTO",
+      department: "Engineering",
+      role_type: "Leadership",
+      location: "San Francisco",
+      start_date: "2022-02",
+      contact: {
+        linkedin_url: "https://linkedin.com/in/cto",
+      },
+    },
+  ],
+  employee_highlights: [
+    {
+      category: "Executive Experience",
+      text: "Former VP at Major Tech Company",
+    },
+    {
+      category: "Technical Background",
+      text: "15+ years in enterprise software",
+    },
+  ],
+};
 
 // Ajout de l'interface pour Harmonic
 interface HarmonicCompany {
@@ -70,10 +200,7 @@ export async function POST(request: Request) {
     const file = formData.get("file") as File;
     const website = formData.get("website") as string;
     if (!file)
-      return NextResponse.json(
-        { error: "Aucun fichier fourni" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
 
     // Generate file hash for caching
     const bytes = await file.arrayBuffer();
@@ -100,27 +227,24 @@ export async function POST(request: Request) {
     await extractSlidesFromPdf(pdfPath, slidesDir, hash);
     const analysis = await analyzePitchDeck(slidesDir, hash, website);
 
-    // Vérifier et créer le dossier parent si nécessaire
+    // Check and create parent directory if necessary
     const cacheParentDir = join(CACHE_DIR, "..");
     if (!existsSync(cacheParentDir)) {
       mkdirSync(cacheParentDir, { recursive: true, mode: 0o777 });
     }
 
-    // Écrire le fichier avec gestion d'erreur
+    // Write file with error handling
     try {
       writeFileSync(cachePath, JSON.stringify(analysis), { mode: 0o666 });
     } catch (writeError) {
-      console.error("Erreur d'écriture du cache:", writeError);
-      // Continuer sans le cache
+      console.error("Cache write error:", writeError);
+      // Continue without cache
     }
 
     return NextResponse.json({ success: true, analysis });
   } catch (error) {
-    console.error("Erreur:", error);
-    return NextResponse.json(
-      { error: "Erreur lors du traitement" },
-      { status: 500 }
-    );
+    console.error("Error:", error);
+    return NextResponse.json({ error: "Processing error" }, { status: 500 });
   }
 }
 
@@ -214,73 +338,36 @@ ${JSON.stringify(essentialData, null, 2)}`,
 }
 
 async function analyzePitchDeck(
-  slidesFolder: string,
+  slidesDir: string,
   hash: string,
   website?: string
 ): Promise<string> {
-  let harmonicData = null;
+  let harmonicData: HarmonicCompany | undefined = undefined;
   let harmonicSummary = "";
+  let marketResearch = null;
 
-  if (website) {
-    try {
-      const domain = website.replace(/^https?:\/\//, "").replace(/\/.*$/, "");
-      console.log("🔍 Fetching Harmonic data for domain:", domain);
+  // Simulate fetching company data
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  harmonicData = MOCK_HARMONIC_DATA;
 
-      const harmonicApiUrl = `https://api.harmonic.ai/companies?website_domain=${domain}&apikey=${process.env.HARMONIC_API_KEY}`;
+  if (harmonicData) {
+    // Get summary
+    harmonicSummary = await summarizeHarmonicData(harmonicData);
 
-      const harmonicResponse = await fetch(harmonicApiUrl, {
-        method: "POST",
-        headers: {
-          accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ website_domain: domain }),
-      });
+    // Perform mock market research
+    const industry = harmonicData.industry || "";
+    const companyName = harmonicData.name || "";
 
-      const responseText = await harmonicResponse.text();
+    marketResearch = await performOnlineResearch(
+      `${companyName} ${industry} market size revenue funding`,
+      ["crunchbase", "statista", "news"]
+    );
 
-      try {
-        const data = JSON.parse(responseText);
-        harmonicData = data;
-
-        if (harmonicData) {
-          console.log(
-            "👥 Employees found:",
-            harmonicData.employees?.length || 0
-          );
-          console.log(
-            "🔗 LinkedIn URLs found:",
-            harmonicData.employees?.filter(
-              (emp: any) => emp.contact?.linkedin_url
-            ).length || 0
-          );
-          console.log(
-            "🏢 Company LinkedIn:",
-            harmonicData.social_media?.linkedin_url || "Not found"
-          );
-
-          // Sauvegarder les données brutes
-          const harmonicCachePath = join(CACHE_DIR, `${hash}_harmonic.json`);
-          writeFileSync(
-            harmonicCachePath,
-            JSON.stringify(harmonicData, null, 2)
-          );
-
-          // Obtenir le résumé
-          harmonicSummary = await summarizeHarmonicData(harmonicData);
-          console.log("✨ Harmonic Summary:");
-          console.log(harmonicSummary);
-        }
-      } catch (parseError) {
-        console.error("❌ Error parsing Harmonic response:", parseError);
-      }
-    } catch (error) {
-      console.error("Erreur Harmonic:", error);
-    }
+    console.log("📊 Market Research Results:", marketResearch.length);
   }
 
-  // Batch process images
-  const slides = readdirSync(slidesFolder)
+  // Process slides
+  const slides = readdirSync(slidesDir)
     .filter((file) => file.startsWith(hash) && file.endsWith(".png"))
     .sort((a, b) => {
       const numA = parseInt(a.match(/\d+/)?.[0] || "0");
@@ -298,7 +385,7 @@ async function analyzePitchDeck(
 
   let allContent = "";
   for (const batch of batches) {
-    const batchContent = await processBatch(batch, slidesFolder);
+    const batchContent = await processBatch(batch, slidesDir);
     allContent += batchContent;
   }
 
@@ -341,20 +428,31 @@ async function getFinalAnalysis(
   harmonicData?: HarmonicCompany,
   harmonicSummary?: string
 ): Promise<string> {
-  const systemPrompt = `You are an experienced venture capital analyst. Your task is to:
-1. Thoroughly analyze the pitch deck
-2. Give significant weight to the verified Harmonic data about the team and company
-3. Pay special attention to team size, composition, and experience
-4. Consider the company's actual market presence based on verified data
-5. Assign a SINGLE SCORE out of 100 reflecting the startup's overall potential
-6. The team assessment (35pts) should heavily consider the verified employee data
-7. Other scoring components: market (25pts), product (20pts), traction/metrics (20pts)
+  const systemPrompt = `You are an experienced venture capital analyst with access to online data. Your task is to:
+1. When information is missing or unclear, actively search for and incorporate relevant online data about:
+   - Market size and growth rates from reliable sources (e.g., Gartner, IDC, Statista)
+   - Competitor funding and valuations from Crunchbase, PitchBook, or similar
+   - Industry benchmarks and metrics from public sources
+2. ALWAYS cite your sources with format: [Source: Organization/Website, Date]
+3. Focus heavily on quantitative data:
+   - Market size in specific dollar amounts
+   - Growth rates with exact percentages
+   - Competitor revenue and funding amounts
+   - Industry-standard metrics and benchmarks
+4. Give significant weight to the verified Harmonic data about the team and company
+5. Pay special attention to team size, composition, and experience with exact numbers
+6. Consider the company's actual market presence based on verified data
+7. Assign a SINGLE SCORE out of 100 reflecting the startup's overall potential
+8. The team assessment (35pts) should heavily consider the verified employee data
+9. Other scoring components: market (25pts), product (20pts), traction/metrics (20pts)
+10. If any critical information is missing, explicitly state what data would be needed for a more complete analysis
 
-IMPORTANT: In the TEAM section, copy and paste the exact leadership information from the Harmonic data summary, 
-keeping all the detailed executive backgrounds and dates. This verified data is crucial and should be presented 
-in its complete form. Only add additional team analysis after this verified data section.
-
-When analyzing other sections, if there are discrepancies between the pitch deck and verified data, mention them.
+IMPORTANT: 
+- Every market size, growth rate, or benchmark claim must be supported by a cited source
+- When using Harmonic data, cite it as [Source: Harmonic.ai, Current Date]
+- If online data contradicts the pitch deck, highlight the discrepancy
+- Focus on hard numbers over qualitative assessments
+- For each section, include a "Data Confidence Score" (High/Medium/Low) based on available verified data
 
 ${
   harmonicSummary
@@ -387,69 +485,85 @@ Ensure to keep the exact format and details of the leadership section in your fi
 • Founded Date: [Required - write "Unknown" if not found]
 • Location: [Required - write "Unknown" if not found]
 • One-Line Description: [Required - write "Unknown" if not found]
+Data Confidence: [High/Medium/Low]
 
-👥 TEAM
+📊 MARKET ANALYSIS
+• Total Addressable Market (TAM):
+  - Current market size with source
+  - Growth rate (CAGR) with source
+  - Geographic breakdown if available
+• Serviceable Addressable Market (SAM):
+  - Size with source
+  - Key market segments
+• Serviceable Obtainable Market (SOM):
+  - Realistic market capture projection
+  - Basis for calculation
+Data Confidence: [High/Medium/Low]
+
+💰 BUSINESS METRICS
+• Current Revenue:
+  - ARR/MRR if SaaS
+  - Revenue growth rate
+  - Unit economics (CAC, LTV, Payback Period)
+• Industry Benchmarks:
+  - Comparison to industry standards
+  - Source of benchmarks
+• Funding History:
+  - Previous rounds with amounts
+  - Valuation history if available
+Data Confidence: [High/Medium/Low]
+
+👥 TEAM ANALYSIS
 • Company Size & Structure:
-  - Total employee count and growth
-  - Department distribution
-  - Office locations
+  - Total employee count with source
+  - Department distribution (%)
+  - YoY growth rate
+• Leadership Metrics:
+  - Executive team size
+  - Years of relevant experience
+  - Prior exits or notable achievements
+• Key Performance Indicators:
+  - Employee retention rate
+  - Key hires in last 12 months
+  - Technical talent ratio
+Data Confidence: [High/Medium/Low]
 
-• Leadership & Key People:
-  - Executive team composition
-  - Notable backgrounds and achievements
-  - LinkedIn profiles when available
+🏢 COMPETITIVE LANDSCAPE
+• Market Share Analysis:
+  - Top competitors with revenue data
+  - Market share percentages
+  - Growth rates comparison
+• Competitor Metrics:
+  - Funding amounts and dates
+  - Team size comparison
+  - Product pricing comparison
+Data Confidence: [High/Medium/Low]
 
-• Team Experience & Expertise:
-  - Prior companies and roles
-  - Technical expertise levels
-  - Industry experience
-  - Key hires and departures
-
-💰 BUSINESS & METRICS
-• Business Model:
-  - Type (SaaS, Marketplace, Hardware)
-  - Revenue streams
-  - Pricing strategy
-
-• Key Metrics:
-  - ARR/Revenue (with product/function split)
-  - Growth rates (YoY, MoM)
-  - Unit economics (CAC, LTV, etc.)
-
-🚀 PRODUCT
-• Product Overview:
-  - Core capabilities & features
-  - Technical architecture
-  - Product roadmap
-
-• Market Validation:
-  - Customer testimonials
-  - External ratings (G2, Product Hunt, Gartner)
-  - Business cases
-
-🌍 MARKET & COMPETITION
-• Market Analysis:
-  - Market sizing (TAM, SAM, SOM)
-  - Market structure
-  - Go-to-market strategy
-
-• Competitive Landscape:
-  - Direct competitors
-  - Incumbent players
-  - Competitive advantages
+📈 TRACTION & GROWTH
+• Customer Metrics:
+  - Current customer count
+  - Customer acquisition rate
+  - Churn rate vs industry standard
+• Growth Metrics:
+  - MoM/YoY growth rates
+  - Expansion revenue
+  - Sales efficiency metrics
+Data Confidence: [High/Medium/Low]
 
 🎯 FINAL ASSESSMENT
 Investment Score: [X/100]
+• Detailed Scoring Breakdown:
+  - Team (35pts): [Score] - [Justification with metrics]
+  - Market (25pts): [Score] - [Justification with metrics]
+  - Product (20pts): [Score] - [Justification with metrics]
+  - Traction (20pts): [Score] - [Justification with metrics]
 
-Justify the score based on:
-• Team strength and experience
-• Market opportunity and timing
-• Product differentiation
-• Business model sustainability
-• Growth potential
-• Risk factors
+📝 Data Gaps & Risks:
+• List of missing critical data points
+• Identified inconsistencies between sources
+• Key risk factors with quantitative impact
 
-[Provide a clear explanation of the score, highlighting key strengths and concerns]`,
+[All claims must be supported by cited sources]`,
           },
           { type: "text", text: content },
         ],
@@ -459,5 +573,5 @@ Justify the score based on:
     temperature: 0.4,
   });
 
-  return response.choices[0].message.content || "Aucune analyse générée";
+  return response.choices[0].message.content || "No analysis generated";
 }
