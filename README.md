@@ -13,32 +13,24 @@
 
 Our AI-powered tool revolutionizes startup analysis by examining pitch decks and websites while enriching this data with insights from four robust sources: PredictLeads, SimilarWeb, Harmonic, and PeopleDataLabs. The result? A clear, actionable analysis that delivers a comprehensive 360-degree view of each startup.
 
+### Why It Matters
+
+This tool empowers venture capital analysts to save time and make better decisions by streamlining startup evaluation. Its fast, accurate, and interactive approach ensures analysts can focus on identifying the most promising opportunities.
+
 ### Key Features
 
 - **One-Pager Generation**: Automatically creates a concise summary of a startup's strengths, weaknesses, and key metrics
 - **Startup Scoring**: Provides a quantitative score based on multiple factors, offering a quick assessment of a startup's potential
 - **Interactive Analysis**: Analysts can ask specific questions and receive tailored insights directly from the data
 
-### Innovative Capabilities
-
-- **CRM Integration**: Detect if you've previously analyzed the same startup and compare startups directly within the tool
-- **Data Transparency**: Every data point is clickable, allowing users to trace insights back to their original sources for full transparency
-- **Advanced Comparisons**: Identify key metrics and patterns across startups to uncover future category leaders
-- **Portfolio Backtesting**: Analyze historical data to identify success patterns and enhance decision-making
-
 ### Future Developments
-
-- **Email Integration**: Automatically analyze startup decks received via email and store results on your device
-- **Privacy-Focused Design**: Utilize a local language model (LLM) for secure, offline interactions
+- **CRM Integration**: Integrate directly the results of VCBoost into your CRM
 - **Enhanced Reliability**: Cross-check data across multiple sources for superior accuracy and reliability
-
-### Why It Matters
-
-This tool empowers venture capital analysts to save time and make better decisions by streamlining startup evaluation. Its fast, accurate, and interactive approach ensures analysts can focus on identifying the most promising opportunities.
+- **More to see in the near future...**
 
 ## Built With
 
-- Node.js
+- Next.js
 
 ## Getting Started
 
