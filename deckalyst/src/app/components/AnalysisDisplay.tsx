@@ -26,6 +26,14 @@ export default function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [score, setScore] = useState<string | null>(null);
   const [progressValue, setProgressValue] = useState(0);
+  const [companyName, setCompanyName] = useState<string>("");
+
+  useEffect(() => {
+    // Extract company name from analysis
+    const nameMatch = analysis.match(/Company Name:?\s*([^\n]+)/i) ||
+                     analysis.match(/STARTUP IDENTITY[\s\S]*?Name:?\s*([^\n]+)/i);
+    setCompanyName(nameMatch ? nameMatch[1].trim().replace(/[\[\]]/g, '') : "");
+  }, [analysis]);
 
   // Simulated historical data for the trend chart
   const trendData = [
@@ -180,8 +188,19 @@ export default function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
   return (
     <div className="space-y-6">
       <Card className="bg-gray-800/50 border-gray-700 overflow-hidden backdrop-blur-md">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-gray-100">
+        <CardHeader className="space-y-4">
+          {companyName && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex justify-center"
+            >
+              <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+                {companyName}
+              </h1>
+            </motion.div>
+          )}
+          <CardTitle className="text-2xl font-bold text-gray-100 text-center">
             Analyse du Pitch Deck
           </CardTitle>
           {score && (
