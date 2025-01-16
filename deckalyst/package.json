@@ -19,6 +19,7 @@
     "lucide-react": "^0.471.1",
     "next": "15.1.4",
     "openai": "^4.78.1",
+    "peopledatalabs": "^9.5.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.15.0",
