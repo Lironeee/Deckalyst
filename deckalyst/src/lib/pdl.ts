@@ -106,7 +106,7 @@ async function queryEmployeesData(
   const params = {
     dataset: "all",
     searchQuery: sqlQuery,
-    size: 100,
+    size: 100, //to be exented to every data points and not only the first 100
     pretty: true,
   };
   const response = await client.person.search.sql(params);
@@ -121,7 +121,7 @@ async function queryOldEmployeesData(
   const params = {
     dataset: "all",
     searchQuery: sqlQuery,
-    size: 100,
+    size: 100, //to be exented to every data points and not only the first 100
     pretty: true,
   };
   const response = await client.person.search.sql(params);

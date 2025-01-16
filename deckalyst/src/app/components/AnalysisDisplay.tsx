@@ -29,14 +29,10 @@ export default function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
   const [companyName, setCompanyName] = useState<string>("");
 
   useEffect(() => {
-    // Extract company name from analysis and handle asterisks
+    // Extract company name from analysis
     const nameMatch = analysis.match(/Company Name:?\s*([^\n]+)/i) ||
-                     analysis.match(/STARTUP IDENTITY[\s\S]*?Name:?\s*([^\n]+)/i) ||
-                     analysis.match(/\*\*\s*([^*\n]+)\s*\*\*/);
-    let name = nameMatch ? nameMatch[1].trim().replace(/[\[\]]/g, '') : "";
-    // Remove any remaining asterisks
-    name = name.replace(/\*/g, '');
-    setCompanyName(name);
+                     analysis.match(/STARTUP IDENTITY[\s\S]*?Name:?\s*([^\n]+)/i);
+    setCompanyName(nameMatch ? nameMatch[1].trim().replace(/[\[\]]/g, '') : "");
   }, [analysis]);
 
   // Simulated historical data for the trend chart
@@ -49,62 +45,36 @@ export default function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
     { month: 'Jun', score: 88 }
   ];
 
-  const cleanText = (text: string) => {
-    return text
-      .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove double asterisks
-      .replace(/\*([^*]+)\*/g, '$1')     // Remove single asterisks
-      .replace(/^[#\-• ]+/gm, '')
-      .replace(/###/g, '')
-      .replace(/\n\s*\n/g, '\n')
-      .replace(/([.:!?])\s*/g, '$1\n')
-      .replace(/•/g, '\n•')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
-  };
-
   const calculateMetrics = (analysis: string): MetricData[] => {
-    // Get global score first
+    // Get global score
     const globalScore = parseInt(getScore() || "0");
     
-    // Define base scores based on global score
-    const baseScores = {
-      market: Math.min(Math.max(globalScore - 5, 0), 100),
-      team: Math.min(Math.max(globalScore + 10, 0), 100),
-      innovation: Math.min(Math.max(globalScore - 2, 0), 100),
-      growth: Math.min(Math.max(globalScore - 8, 0), 100)
-    };
-
-    // Add small random variations
-    const addVariation = (base: number) => {
-      const variation = Math.floor(Math.random() * 6) - 3; // ±3 variation
-      return Math.min(Math.max(base + variation, 0), 100);
-    };
-
+    // Définir des scores réalistes basés sur le score global
     const metrics = [
       {
         name: 'Market Size',
-        value: addVariation(baseScores.market),
+        value: Math.min(Math.max(globalScore - 15 + Math.floor(Math.random() * 6), 0), 100), // Légèrement plus bas
         color: 'from-green-500 to-emerald-500',
         icon: <Target className="h-5 w-5" />,
         description: 'Market positioning and target audience analysis'
       },
       {
         name: 'Team',
-        value: addVariation(baseScores.team),
+        value: Math.min(Math.max(globalScore + 5 + Math.floor(Math.random() * 6), 0), 100), // Légèrement plus haut
         color: 'from-blue-500 to-indigo-500',
         icon: <Users className="h-5 w-5" />,
         description: 'Team composition and experience evaluation'
       },
       {
         name: 'Innovation',
-        value: addVariation(baseScores.innovation),
+        value: Math.min(Math.max(globalScore - 5 + Math.floor(Math.random() * 6), 0), 100), // Proche du score global
         color: 'from-purple-500 to-pink-500',
         icon: <Lightbulb className="h-5 w-5" />,
         description: 'Technology and innovation assessment'
       },
       {
         name: 'Growth',
-        value: addVariation(baseScores.growth),
+        value: Math.min(Math.max(globalScore - 20 + Math.floor(Math.random() * 6), 0), 100), // Plus bas
         color: 'from-orange-500 to-red-500',
         icon: <TrendingUp className="h-5 w-5" />,
         description: 'Growth metrics and potential evaluation'
@@ -170,6 +140,18 @@ export default function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
       return () => clearInterval(interval);
     }
   }, [analysis]);
+
+  const cleanText = (text: string) => {
+    return text
+      .replace(/^[#\-*• ]+/gm, '')
+      .replace(/\*\*/g, '')
+      .replace(/###/g, '')
+      .replace(/\n\s*\n/g, '\n')
+      .replace(/([.:!?])\s*/g, '$1\n')
+      .replace(/•/g, '\n•')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  };
 
   const sections = analysis
     .split('\n\n')

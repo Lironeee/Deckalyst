@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Upload, Loader2 } from 'lucide-react';
+import { Upload, Loader2, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,13 @@ export default function PdfUploader() {
   const [isLoading, setIsLoading] = useState(false);
   const [analysis, setAnalysis] = useState<string>('');
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -74,16 +81,31 @@ export default function PdfUploader() {
                     transition={{ duration: 0.2 }}
                   >
                     <div className="space-y-1 text-center">
-                      <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                      {selectedFile ? (
+                        <div className="flex items-center justify-center space-x-2">
+                          <FileText className="h-12 w-12 text-purple-400" />
+                          <span className="text-sm text-gray-200">{selectedFile.name}</span>
+                        </div>
+                      ) : (
+                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                      )}
                       <div className="flex text-sm text-gray-400">
                         <Label
                           htmlFor="file-upload"
                           className="relative cursor-pointer rounded-md font-medium text-purple-400 hover:text-purple-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500"
                         >
-                          <span>Uploader un fichier</span>
-                          <Input id="file-upload" name="file" type="file" accept=".pdf" className="sr-only" required />
+                          <span>{selectedFile ? 'Changer de fichier' : 'Uploader un fichier'}</span>
+                          <Input 
+                            id="file-upload" 
+                            name="file" 
+                            type="file" 
+                            accept=".pdf" 
+                            className="sr-only" 
+                            required 
+                            onChange={handleFileChange}
+                          />
                         </Label>
-                        <p className="pl-1">ou glisser-déposer</p>
+                        {!selectedFile && <p className="pl-1">ou glisser-déposer</p>}
                       </div>
                       <p className="text-xs text-gray-400">PDF jusqu'à 10MB</p>
                     </div>
@@ -92,7 +114,7 @@ export default function PdfUploader() {
                 <div className="text-center">
                   <Button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={isLoading || !selectedFile}
                     className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition-all duration-300"
                   >
                     {isLoading ? (
