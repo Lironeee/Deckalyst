@@ -36,7 +36,7 @@ This tool empowers venture capital analysts to save time and make better decisio
 
 ### Direct Usage
 
-Visit our website to use the product directly: [Website Link]
+Visit our website to use the product directly: [VCBoost](https://deckalyst.vercel.app/)
 
 ### Local Setup
 
