@@ -17,7 +17,7 @@ Our AI-powered tool revolutionizes startup analysis by examining pitch decks and
 
 - **One-Pager Generation**: Automatically creates a concise summary of a startup's strengths, weaknesses, and key metrics
 - **Startup Scoring**: Provides a quantitative score based on multiple factors, offering a quick assessment of a startup's potential
-- **Interactive Analysis**: Powered by a Retrieval-Augmented Generation (RAG) system, analysts can ask specific questions and receive tailored insights directly from the data
+- **Interactive Analysis**: Analysts can ask specific questions and receive tailored insights directly from the data
 
 ### Innovative Capabilities
 
