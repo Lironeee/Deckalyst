@@ -65,6 +65,14 @@ export default function PitchDeckChat({ analysis }: { analysis: string }) {
     }
   };
 
+  const formatMessage = (content: string) => {
+    return content
+      .replace(/([.:!?])\s*/g, '$1\n')
+      .replace(/•/g, '\n•')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  };
+
   return (
     <Card className="flex flex-col h-[600px] bg-gray-800/50 border-gray-700 shadow-lg rounded-lg overflow-hidden backdrop-blur-md">
       <CardHeader>
@@ -86,7 +94,9 @@ export default function PitchDeckChat({ analysis }: { analysis: string }) {
                   : 'bg-gray-700'
               } max-w-[80%]`}
             >
-              <p className="text-sm text-gray-100">{message.content}</p>
+              <p className="text-sm text-gray-100 whitespace-pre-wrap leading-relaxed">
+                {formatMessage(message.content)}
+              </p>
             </motion.div>
           ))}
         </AnimatePresence>

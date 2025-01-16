@@ -47,6 +47,10 @@ export default function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
       .replace(/^[#\-*• ]+/gm, '')
       .replace(/\*\*/g, '')
       .replace(/###/g, '')
+      .replace(/\n\s*\n/g, '\n')
+      .replace(/([.:!?])\s*/g, '$1\n')
+      .replace(/•/g, '\n•')
+      .replace(/\n{3,}/g, '\n\n')
       .trim();
   };
 
@@ -110,7 +114,7 @@ export default function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <div className="px-4 py-2 text-sm text-gray-300 whitespace-pre-wrap">
+                  <div className="px-4 py-2 text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
                     {content}
                   </div>
                 </motion.div>
